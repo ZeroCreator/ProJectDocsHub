@@ -120,6 +120,17 @@ body {
 .doc-group-header {
     padding: 1rem 1.25rem;
     border-bottom: 1px solid #f1f5f9;
+    cursor: pointer;
+    user-select: none;
+}
+
+.doc-group-header:hover {
+    background: #f8fafc;
+}
+
+.group-toggle-icon {
+    font-size: 0.85rem;
+    transition: transform 0.2s ease;
 }
 
 .doc-group-title {

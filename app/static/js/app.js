@@ -268,6 +268,30 @@ function toggleSection(sectionId) {
     }
 }
 
+function getGroupCollapsedState(projectId) {
+    const key = `groups_collapsed_${projectId}`;
+    return JSON.parse(localStorage.getItem(key) || '{}');
+}
+
+function isGroupCollapsed(projectId, groupId) {
+    return getGroupCollapsedState(projectId)[groupId] !== false;
+}
+
+function toggleGroup(groupId) {
+    const state = getGroupCollapsedState(PROJECT_ID);
+    state[groupId] = !state[groupId];
+    localStorage.setItem(`groups_collapsed_${PROJECT_ID}`, JSON.stringify(state));
+    const card = document.querySelector(`.doc-group[data-id="${groupId}"]`);
+    if (!card) return;
+    const body = card.querySelector('.doc-group-body');
+    const icon = card.querySelector('.group-toggle-icon');
+    if (body) body.classList.toggle('d-none');
+    if (icon) {
+        icon.classList.toggle('bi-chevron-down');
+        icon.classList.toggle('bi-chevron-right');
+    }
+}
+
 async function loadSections(projectId) {
     const container = document.getElementById('documents-list');
     const header = document.getElementById('content-header');
@@ -303,6 +327,9 @@ async function loadSections(projectId) {
         }
         container.innerHTML = html;
         initSectionSortable(projectId);
+        document.querySelectorAll('.section-body, .ungrouped-block').forEach(el => {
+            initGroupSortable(projectId, el);
+        });
     } catch (e) {
         container.innerHTML = `<div class="alert alert-danger">Ошибка загрузки: ${e.message}</div>`;
     }
@@ -347,14 +374,17 @@ function renderGroup(doc, idx) {
         ? '<div class="text-muted small ps-2">Нет материалов — добавьте ссылку или файл</div>'
         : '';
 
+    const groupCollapsed = isGroupCollapsed(PROJECT_ID, doc.id);
     return `
         <div class="doc-group mb-3 fade-in" style="animation-delay:${idx*0.05}s" data-id="${doc.id}">
-            <div class="doc-group-header">
+            <div class="doc-group-header" onclick="toggleGroup(${doc.id})">
                 <div class="d-flex justify-content-between align-items-center">
                     <div class="d-flex align-items-center gap-2">
+                        <div class="doc-drag-handle" onclick="event.stopPropagation()"><i class="bi bi-grip-vertical"></i></div>
+                        <i class="bi ${groupCollapsed ? 'bi-chevron-right' : 'bi-chevron-down'} group-toggle-icon"></i>
                         <h5 class="mb-0 doc-group-title">${escapeHtml(doc.title)}</h5>
                     </div>
-                    <div class="doc-group-actions">
+                    <div class="doc-group-actions" onclick="event.stopPropagation()">
                         <button class="btn btn-sm btn-outline-primary" onclick="event.stopPropagation(); showAddItemModal(${doc.id})">
                             <i class="bi bi-plus-lg"></i>
                         </button>
@@ -367,7 +397,7 @@ function renderGroup(doc, idx) {
                     </div>
                 </div>
             </div>
-            <div class="doc-group-body">
+            <div class="doc-group-body ${groupCollapsed ? 'd-none' : ''}">
                 ${itemsHtml}
                 ${emptyItems}
             </div>
@@ -491,6 +521,7 @@ function initSectionSortable(projectId) {
     sectionSortable = Sortable.create(el, {
         animation: 150,
         handle: '.doc-drag-handle',
+        draggable: '.section-card',
         ghostClass: 'sortable-ghost',
         dragClass: 'sortable-drag',
         onEnd: function (evt) {
@@ -502,6 +533,41 @@ function initSectionSortable(projectId) {
             }
         }
     });
+}
+
+function initGroupSortable(projectId, el) {
+    if (!el) return;
+    const existing = el._sortable;
+    if (existing) existing.destroy();
+
+    el._sortable = Sortable.create(el, {
+        animation: 150,
+        handle: '.doc-drag-handle',
+        draggable: '.doc-group',
+        ghostClass: 'sortable-ghost',
+        dragClass: 'sortable-drag',
+        onEnd: function () {
+            const ids = Array.from(el.children)
+                .filter(child => child.classList.contains('doc-group'))
+                .map(child => parseInt(child.dataset.id));
+            if (ids.length > 1) {
+                reorderDocuments(projectId, ids);
+            }
+        }
+    });
+}
+
+async function reorderDocuments(projectId, documentIds) {
+    try {
+        await api(`${API_BASE}/projects/${projectId}/documents/reorder`, {
+            method: 'PATCH',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({document_ids: documentIds})
+        });
+    } catch (e) {
+        console.error('Reorder documents failed:', e);
+        loadSections(projectId);
+    }
 }
 
 async function reorderSections(projectId, sectionIds) {

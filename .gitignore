@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+env/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Database & uploads (local dev)
+*.db
+*.db-journal
+uploads/
+data/
+
+# Environment
+.env
+
+# Build
+dist/
+build/
+*.egg-info/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker (volumes)
+docker-compose.override.yml
+
+# Backups
+backup_*.tar.gz

@@ -36,6 +36,6 @@ Thumbs.db
 docker-compose.override.yml
 
 # Backups
-backup_*.tar.gz
+#backup_*.tar.gz
 
 DOCS/

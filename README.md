@@ -62,7 +62,7 @@ app/
 `StorageBackend` — интерфейс с методами `save()`, `delete()`, `get_local_path()`, `get_download_url()`, `get_public_url()`.
 
 Реализации:
-- `LocalStorage` — сохраняет в `./uploads/`, отдаёт через `FileResponse`
+- `LocalStorage` — сохраняет в `./data/uploads/`, отдаёт через `FileResponse`
 - `S3Storage` — загружает в бакет S3, скачивание через **presigned URL** (даже для приватных бакетов)
 
 Переключение через переменную окружения `STORAGE_TYPE=local` или `s3`.
@@ -227,15 +227,15 @@ S3_FORCE_PATH_STYLE=False
 ### Что бэкапить
 
 Все данные хранятся в двух местах:
-- `projectdocs.db` — база данных SQLite (проекты, разделы, группы, ссылки, метаданные файлов)
-- `uploads/` — загруженные файлы
+- `data/projectdocs.db` — база данных SQLite (проекты, разделы, группы, ссылки, метаданные файлов)
+- `data/uploads/` — загруженные файлы
 
 ### Ручной бэкап
 
 ```bash
 # В корне проекта
 cd ~/ProJectDocsHub
-tar -czvf backup_$(date +%Y%m%d_%H%M%S).tar.gz projectdocs.db uploads/
+tar -czvf backup_$(date +%Y%m%d_%H%M%S).tar.gz data/projectdocs.db data/uploads/
 ```
 
 Получится архив вида `backup_20260520_143052.tar.gz`.
@@ -255,23 +255,19 @@ tar -xzvf backup_20260520_143052.tar.gz
 ```bash
 # Каждый день в 3:00 утра
 crontab -e
-0 3 * * * cd /home/user/ProJectDocsHub && tar -czf /home/user/backups/projectdocs_$(date +\%Y\%m\%d).tar.gz projectdocs.db uploads/ >/dev/null 2>&1
+0 3 * * * cd /home/user/ProJectDocsHub && tar -czf /home/user/backups/projectdocs_$(date +\%Y\%m\%d).tar.gz data/projectdocs.db data/uploads/ >/dev/null 2>&1
 ```
 
 ### Бэкап при деплое на другой сервер
 
 ```bash
 # На исходной машине
-tar -czvf deploy.tar.gz projectdocs.db uploads/ .env
+tar -czvf backup_$(date +%Y%m%d_%H%M%S).tar.gz data/projectdocs.db data/uploads/ .env
 
 # На новом сервере
 mkdir -p /opt/ProJectDocsHub && cd /opt/ProJectDocsHub
 # Распакуй проект + данные
-tar -xzvf deploy.tar.gz
-# Перенеси данные в Docker volume
-mkdir -p data/uploads
-mv projectdocs.db data/
-mv uploads/* data/uploads/
+tar -xzvf deploy_20260520_143052.tar.gz
 # Запуск
 docker compose up -d --build
 ```

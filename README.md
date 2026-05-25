@@ -267,7 +267,7 @@ tar -czvf backup_$(date +%Y%m%d_%H%M%S).tar.gz data/projectdocs.db data/uploads/
 # На новом сервере
 mkdir -p /opt/ProJectDocsHub && cd /opt/ProJectDocsHub
 # Распакуй проект + данные
-tar -xzvf deploy_20260520_143052.tar.gz
+tar -xzvf backup_20260520_143052.tar.gz
 # Запуск
 docker compose up -d --build
 ```

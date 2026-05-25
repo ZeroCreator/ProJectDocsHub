@@ -122,6 +122,12 @@ async def lifespan(app: FastAPI):
         if old_tables.fetchone():
             await conn.execute(text("DROP TABLE documents_old"))
 
+        # Migration: add sort_order to projects
+        project_cols = await conn.execute(text("PRAGMA table_info(projects)"))
+        project_col_names = [r[1] for r in project_cols.fetchall()]
+        if "sort_order" not in project_col_names:
+            await conn.execute(text("ALTER TABLE projects ADD COLUMN sort_order INTEGER DEFAULT 0"))
+
         # Migration: add sections support
         if "sections" not in table_names:
             await conn.execute(text("""

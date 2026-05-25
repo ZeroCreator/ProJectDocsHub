@@ -6,7 +6,7 @@ from typing import List
 
 from app.database import get_db
 from app.models import Project, Document, DocumentItem, DocType
-from app.schemas import ProjectCreate, ProjectUpdate, ProjectOut, ProjectDetailOut
+from app.schemas import ProjectCreate, ProjectUpdate, ProjectOut, ProjectDetailOut, ProjectReorderRequest
 from app.storage import get_storage, StorageBackend
 
 router = APIRouter(prefix="/api/projects", tags=["projects"])
@@ -17,7 +17,7 @@ async def list_projects(db: AsyncSession = Depends(get_db)):
     result = await db.execute(
         select(Project)
         .options(selectinload(Project.documents), selectinload(Project.sections))
-        .order_by(Project.updated_at.desc())
+        .order_by(Project.sort_order, Project.updated_at.desc())
     )
     return result.scalars().all()
 
@@ -29,6 +29,17 @@ async def create_project(data: ProjectCreate, db: AsyncSession = Depends(get_db)
     await db.commit()
     await db.refresh(project)
     return project
+
+
+@router.patch("/reorder", status_code=204)
+async def reorder_projects(data: ProjectReorderRequest, db: AsyncSession = Depends(get_db)):
+    for idx, project_id in enumerate(data.project_ids):
+        result = await db.execute(select(Project).where(Project.id == project_id))
+        project = result.scalar_one_or_none()
+        if project:
+            project.sort_order = idx
+    await db.commit()
+    return None
 
 
 @router.get("/{project_id}", response_model=ProjectDetailOut)

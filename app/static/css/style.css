@@ -61,6 +61,42 @@ body {
     color: #94a3b8;
 }
 
+.project-card {
+    position: relative;
+}
+
+.project-drag-handle {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    color: #cbd5e1;
+    cursor: grab;
+    padding: 0.5rem;
+    font-size: 1.25rem;
+    line-height: 1;
+    z-index: 2;
+    border-radius: 6px;
+    transition: all 0.15s ease;
+}
+
+.project-drag-handle:hover {
+    color: #64748b;
+    background: #f1f5f9;
+}
+
+.col-md-6.sortable-ghost .project-card {
+    opacity: 0.5;
+    background: #e0e7ff;
+    border: 2px dashed var(--primary);
+}
+
+.col-md-6.sortable-drag .project-card {
+    opacity: 1;
+    background: #fff;
+    box-shadow: var(--card-hover);
+    transform: scale(1.02);
+}
+
 /* Document Cards */
 .doc-card {
     background: #fff;

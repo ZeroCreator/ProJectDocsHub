@@ -94,9 +94,14 @@ class SectionReorderRequest(BaseModel):
     section_ids: List[int]
 
 
+class ProjectReorderRequest(BaseModel):
+    project_ids: List[int]
+
+
 class ProjectOut(ProjectBase):
     model_config = ConfigDict(from_attributes=True)
     id: int
+    sort_order: int = 0
     created_at: datetime
     updated_at: datetime
     documents: List[DocumentOut] = []

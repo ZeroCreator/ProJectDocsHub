@@ -141,8 +141,9 @@ async function loadProjects() {
             return;
         }
         container.innerHTML = projects.map((p, idx) => `
-            <div class="col-md-6 col-lg-4 fade-in" style="animation-delay:${idx*0.05}s">
-                <div class="project-card" onclick="location.href='/projects/${p.id}'">
+            <div class="col-md-6 col-lg-4 fade-in" style="animation-delay:${idx*0.05}s" data-id="${p.id}">
+                <div class="project-card" data-href="/projects/${p.id}">
+                    <div class="project-drag-handle"><i class="bi bi-grip-vertical"></i></div>
                     <div>
                         <div class="project-title">${escapeHtml(p.name)}</div>
                         <div class="project-desc">${escapeHtml(p.description || 'Без описания')}</div>
@@ -154,8 +155,54 @@ async function loadProjects() {
                 </div>
             </div>
         `).join('');
+        container.querySelectorAll('.project-card').forEach(card => {
+            card.addEventListener('click', (e) => {
+                if (e.target.closest('.project-drag-handle')) return;
+                location.href = card.dataset.href;
+            });
+        });
+        initProjectSortable();
     } catch (e) {
         container.innerHTML = `<div class="alert alert-danger">Ошибка загрузки: ${e.message}</div>`;
+    }
+}
+
+let projectSortable = null;
+
+function initProjectSortable() {
+    const el = document.getElementById('projects-list');
+    if (!el) return;
+    if (projectSortable) projectSortable.destroy();
+
+    projectSortable = Sortable.create(el, {
+        animation: 150,
+        handle: '.project-drag-handle',
+        draggable: '.col-md-6',
+        forceFallback: true,
+        fallbackClass: 'sortable-drag',
+        ghostClass: 'sortable-ghost',
+        dragClass: 'sortable-drag',
+        onEnd: function () {
+            const ids = Array.from(el.children)
+                .filter(child => child.classList.contains('col-md-6'))
+                .map(child => parseInt(child.dataset.id));
+            if (ids.length > 1) {
+                reorderProjects(ids);
+            }
+        }
+    });
+}
+
+async function reorderProjects(projectIds) {
+    try {
+        await api(`${API_BASE}/projects/reorder`, {
+            method: 'PATCH',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({project_ids: projectIds})
+        });
+    } catch (e) {
+        console.error('Reorder projects failed:', e);
+        loadProjects();
     }
 }
 

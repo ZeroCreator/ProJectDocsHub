@@ -141,7 +141,7 @@ async function loadProjects() {
             return;
         }
         container.innerHTML = projects.map((p, idx) => `
-            <div class="col-md-6 col-lg-4 fade-in" style="animation-delay:${idx*0.05}s" data-id="${p.id}">
+            <div class="col-md-6 col-lg-4 fade-in" data-id="${p.id}">
                 <div class="project-card" data-href="/projects/${p.id}">
                     <div class="project-drag-handle"><i class="bi bi-grip-vertical"></i></div>
                     <div>
@@ -386,7 +386,7 @@ function renderSection(section, idx) {
     const collapsed = isSectionCollapsed(PROJECT_ID, section.id);
     const docsHtml = (section.documents || []).map((d, iidx) => renderGroup(d, iidx)).join('');
     return `
-        <div class="section-card mb-4 fade-in" style="animation-delay:${idx*0.05}s" data-id="${section.id}">
+        <div class="section-card mb-4 fade-in" data-id="${section.id}">
             <div class="section-header" onclick="toggleSection(${section.id})">
                 <div class="d-flex align-items-center gap-2 flex-fill">
                     <div class="doc-drag-handle" onclick="event.stopPropagation()"><i class="bi bi-grip-vertical"></i></div>
@@ -423,7 +423,7 @@ function renderGroup(doc, idx) {
 
     const groupCollapsed = isGroupCollapsed(PROJECT_ID, doc.id);
     return `
-        <div class="doc-group mb-3 fade-in" style="animation-delay:${idx*0.05}s" data-id="${doc.id}">
+        <div class="doc-group mb-3 fade-in" data-id="${doc.id}">
             <div class="doc-group-header" onclick="toggleGroup(${doc.id})">
                 <div class="d-flex justify-content-between align-items-center">
                     <div class="d-flex align-items-center gap-2">
